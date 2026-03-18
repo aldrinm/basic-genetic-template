@@ -12,5 +12,10 @@ public class Chromosome {
         return genes;
     }
 
-
+    @Override
+    public String toString() {
+        return "Chromosome{" +
+                "genes='" + genes + '\'' +
+                '}';
+    }
 }

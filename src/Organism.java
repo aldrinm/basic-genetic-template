@@ -1,3 +1,5 @@
+import static java.lang.Math.abs;
+
 public class Organism {
 
     Chromosome chromosome;
@@ -6,13 +8,11 @@ public class Organism {
     static void main() {
 //        testFitness();
 
-        testCreatePopulation();
+
 
     }
 
-    private static void testCreatePopulation() {
 
-    }
 
 
     private static void testFitness() {
@@ -23,12 +23,12 @@ public class Organism {
         String genes = "0101000001010100100011110110"; //5+1-4*3/6
         og.chromosome = new Chromosome(genes);
 
-        float fitness1 = og.fitness();
+        float fitness1 = og.fitness(10);
         System.out.println("fitness1 = " + fitness1);
 
     }
 
-    private float fitness() {
+    private float fitness(int goal) {
         if (chromosome == null) {
             return 0.0f;
         }
@@ -69,10 +69,9 @@ public class Organism {
         System.out.println("expression = " + expression);
         var unJunked = removeJunkGenes(expression.toString());
         System.out.println("unJunked = " + unJunked);
-        var result = evaluateExpression(unJunked);
+        var phenotype = evaluateExpression(unJunked);
 
-        this.fitness = result;
-        return result;
+        return 1 / abs((goal - phenotype) + 1);
     }
 
     private String removeJunkGenes(String expression) {
@@ -144,5 +143,17 @@ public class Organism {
             case "11" -> "/";
             default -> "JUNK";
         };
+    }
+
+    @Override
+    public String toString() {
+        return "Organism{" +
+                "chromosome=" + chromosome +
+                ", fitness=" + fitness +
+                '}';
+    }
+
+    public void calculateFitness(int goal) {
+        this.fitness = fitness(goal);
     }
 }
