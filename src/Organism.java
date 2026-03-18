@@ -37,7 +37,7 @@ public class Organism {
         if (genes == null || genes.isEmpty()) {
             return 0.0f;
         }
-        IO.println(String.format("Genes %s", genes));
+        //IO.println(String.format("Genes %s", genes));
 
         StringBuilder expression = new StringBuilder();
 
@@ -66,12 +66,13 @@ public class Organism {
         }
 
 
-        System.out.println("expression = " + expression);
         var unJunked = removeJunkGenes(expression.toString());
-        System.out.println("unJunked = " + unJunked);
         var phenotype = evaluateExpression(unJunked);
 
-        return 1 / abs((goal - phenotype) + 1);
+        float fitnessVal = 1.0f / (1.0f + abs(goal - phenotype));
+        System.out.println("expression = " + expression + " unJunked = " + unJunked + " phenotype = " + phenotype + " fitness = " + fitnessVal);
+
+        return fitnessVal;
     }
 
     private String removeJunkGenes(String expression) {
@@ -93,27 +94,58 @@ public class Organism {
 
         java.util.List<String> list = new java.util.ArrayList<>(java.util.Arrays.asList(tokens));
 
+        System.out.println("Before first pass, list = " + list);
         // First pass: Multiplication and Division
         for (int i = 0; i < list.size(); i++) {
             String token = list.get(i);
             if (token.equals("*") || token.equals("/")) {
-                float left = Float.parseFloat(list.get(i - 1));
-                float right = Float.parseFloat(list.get(i + 1));
-                float res = token.equals("*") ? left * right : (right != 0 ? left / right : 0);
-                list.set(i - 1, String.valueOf(res));
-                list.remove(i); // remove operator
-                list.remove(i); // remove right operand
-                i--;
+                if (i == 0 || i + 1 >= list.size()) { // Invalid operator position
+                    list.remove(i);
+                    i--;
+                    continue;
+                }
+                try {
+                    float left = Float.parseFloat(list.get(i - 1));
+                    float right = Float.parseFloat(list.get(i + 1));
+                    float res = token.equals("*") ? left * right : (right != 0 ? left / right : 0);
+                    list.set(i - 1, String.valueOf(res));
+                    list.remove(i); // remove operator
+                    list.remove(i); // remove right operand
+                    i--;
+                } catch (NumberFormatException e) {
+                    // One of the operands is not a number, e.g. "5 * + 2"
+                    list.remove(i); // remove the operator
+                    i--;
+                }
             }
         }
 
+        System.out.println("Before second pass, list = " + list);
         // Second pass: Addition and Subtraction
-        float result = Float.parseFloat(list.get(0));
+        if (!list.isEmpty() && (list.get(0).equals("+") || list.get(0).equals("-"))) {
+            list.add(0, "0");
+        }
+
+        if (list.isEmpty()) return 0;
+
+        float result;
+        try {
+            result = Float.parseFloat(list.get(0));
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            return 0; // malformed expression
+        }
+
         for (int i = 1; i < list.size(); i += 2) {
             String op = list.get(i);
-            float val = Float.parseFloat(list.get(i + 1));
-            if (op.equals("+")) result += val;
-            else if (op.equals("-")) result -= val;
+            if (i + 1 >= list.size()) break; // trailing operator
+            try {
+                float val = Float.parseFloat(list.get(i + 1));
+                if (op.equals("+")) result += val;
+                else if (op.equals("-")) result -= val;
+            } catch (NumberFormatException e) {
+                // a case like "5 + -"
+                break;
+            }
         }
 
         return result;

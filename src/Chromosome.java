@@ -12,6 +12,10 @@ public class Chromosome {
         return genes;
     }
 
+    public void setGenes(String genes) {
+        this.genes = genes;
+    }
+
     @Override
     public String toString() {
         return "Chromosome{" +
